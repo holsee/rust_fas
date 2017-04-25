@@ -5,8 +5,8 @@ use futures::Future;
 use futures_cpupool::CpuPool;
 
 //const BIG_PRIME: u64 = 15_485_867;
-//const BIG_PRIME: u64 = 982_451_653;
-const BIG_PRIME: u64 = 104_395_303;
+//const BIG_PRIME: u64 = 104_395_303;
+const BIG_PRIME: u64 = 982_451_653;
 
 // checks whether a number is prime, slowly
 fn is_prime(num: u64) -> bool {
@@ -20,12 +20,12 @@ fn is_prime(num: u64) -> bool {
 }
 
 fn main() {
-    // async()
+    async()
 
-    sync();
-    sync();
-    sync();
-    sync()
+    //sync();
+    //sync();
+    //sync();
+    //sync()
 }
 
 fn async() {
@@ -56,8 +56,8 @@ fn async() {
     println!("Prime? {} {} {} {}", r0, r1, r2, r3)
 }
 
-fn sync() {
-    let result: Result<bool, ()> = Ok(is_prime(BIG_PRIME));
-    println!("Sync Prime? {}", result.unwrap())
-}
+// fn sync() {
+//     let result: Result<bool, ()> = Ok(is_prime(BIG_PRIME));
+//     println!("Sync Prime? {}", result.unwrap())
+// }
 
