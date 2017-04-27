@@ -1,12 +1,17 @@
 extern crate futures;
 extern crate futures_cpupool;
+extern crate tokio_timer;
+
+use std::time::Duration;
+use tokio_timer::Timer;
 
 use futures::Future;
 use futures_cpupool::CpuPool;
 
+
 //const BIG_PRIME: u64 = 15_485_867;
-//const BIG_PRIME: u64 = 104_395_303;
-const BIG_PRIME: u64 = 982_451_653;
+const BIG_PRIME: u64 = 104_395_303;
+//const BIG_PRIME: u64 = 982_451_653;
 
 // checks whether a number is prime, slowly
 fn is_prime(num: u64) -> bool {
@@ -21,43 +26,30 @@ fn is_prime(num: u64) -> bool {
 
 fn main() {
     async()
-
-    //sync();
-    //sync();
-    //sync();
-    //sync()
 }
 
 fn async() {
     let pool = CpuPool::new(4);
+    let timer = Timer::default();
 
-    let fprime0 = pool.spawn_fn(|| -> Result<bool, ()> {
+    // a future that resolves to Err after a timeout
+    let timeout = timer.sleep(Duration::from_millis(1500))
+                       .then(|_| Err(()));
+
+    let fprime = pool.spawn_fn(|| -> Result<bool, ()> {
         Ok(is_prime(BIG_PRIME))
     });
 
-    let fprime1 = pool.spawn_fn(|| -> Result<bool, ()> {
-        Ok(is_prime(BIG_PRIME))
-    });
+    // a future that resolves to one of the above values -- whichever
+    // completes first!
+    let winner = timeout.select(fprime)
+                        .map(|(win, _)| win);
 
-    let fprime2 = pool.spawn_fn(|| -> Result<bool, ()> {
-        Ok(is_prime(BIG_PRIME))
-    });
-
-    let fprime3 = pool.spawn_fn(|| -> Result<bool, ()> {
-        Ok(is_prime(BIG_PRIME))
-    });
-
-    let r0 = fprime0.wait().unwrap();
-    let r1 = fprime1.wait().unwrap();
-    let r2 = fprime2.wait().unwrap();
-    let r3 = fprime3.wait().unwrap();
-
-    // wait for computation, unwrap result, print
-    println!("Prime? {} {} {} {}", r0, r1, r2, r3)
+    // now block until we have a winner, then print what happened
+    match winner.wait() {
+        Ok(true) => println!("Prime"),
+        Ok(false) => println!("Not prime"),
+        Err(_) => println!("Timed out"),
+    }
 }
-
-// fn sync() {
-//     let result: Result<bool, ()> = Ok(is_prime(BIG_PRIME));
-//     println!("Sync Prime? {}", result.unwrap())
-// }
 
